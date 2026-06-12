@@ -9,8 +9,9 @@ import Receta from './models/Receta.js';
 
 const app = express();
 
-// 1. Conexión local al Community Server (Adiós bloqueos de internet)
+// 1. Conexión dinámica (Usa Atlas en Render o local en tu compu)
 const CADENA_CONEXION = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/recetasDB";
+
 // 2. Configuración obligatoria del motor de vistas y body-parser
 app.set('view engine', 'ejs');
 app.set('views', './views');
@@ -24,7 +25,7 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// 3. Conexión a MongoDB Local / Atlas
+// 3. Conexión a MongoDB
 mongoose.connect(CADENA_CONEXION)
   .then(() => console.log('Conectado exitosamente a MongoDB'))
   .catch(err => console.error('Error de conexión:', err));
@@ -48,7 +49,7 @@ app.post('/login', async (req, res) => {
   console.log("--> Datos recibidos en formulario:", { email, password });
 
   try {
-    // Buscamos el usuario convirtiendo el correo a minúsculas para evitar fallos de formato
+    // Buscamos el usuario convirtiendo el correo a minúsculas
     const usuario = await Usuario.findOne({ email: email.toLowerCase() });
     if (!usuario) {
       console.log("--> El usuario no existe en la base de datos.");
@@ -83,12 +84,11 @@ app.get('/registro', (req, res) => {
 
 // POST: Procesar y guardar el nuevo usuario en la Base de Datos
 app.post('/registro', async (req, res) => {
-    console.log("--> Intentando registrar a:", req.body.email); // <--- AÑADE ESTO
-    try {
-        const { email, password } = req.body;
-        // ... resto del código
+  console.log("--> Intentando registrar a:", req.body.email);
+  try {
+    const { email, password } = req.body;
 
-    // Verificar si el correo ya está registrado en la base de datos local
+    // Verificar si el correo ya está registrado
     const usuarioExistente = await Usuario.findOne({ email: email.toLowerCase() });
     if (usuarioExistente) {
       return res.render('registro.ejs', { error: 'El correo electrónico ya está registrado.' });
@@ -107,7 +107,7 @@ app.post('/registro', async (req, res) => {
     await nuevoUsuario.save();
     console.log(`--> Usuario nuevo registrado con éxito: ${email}`);
 
-    // Redireccionar al login para que inicie sesión con su nueva cuenta
+    // Redireccionar al login
     res.redirect('/login');
 
   } catch (error) {
@@ -157,6 +157,6 @@ app.post('/recetas/eliminar/:id', verificarSesion, async (req, res) => {
 
 app.get('/', (req, res) => res.redirect('/dashboard'));
 
-// Corriendo en el puerto 3001 libre
+// Corriendo en el puerto asignado por Render o en el 3001 local
 const PUERTO = process.env.PORT || 3001;
 app.listen(PUERTO, () => console.log(`Servidor corriendo en el puerto ${PUERTO}`));
