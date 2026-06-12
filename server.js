@@ -10,8 +10,7 @@ import Receta from './models/Receta.js';
 const app = express();
 
 // 1. Conexión local al Community Server (Adiós bloqueos de internet)
-const CADENA_CONEXION = "mongodb://127.0.0.1:27017/recetasDB";
-
+const CADENA_CONEXION = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/recetasDB";
 // 2. Configuración obligatoria del motor de vistas y body-parser
 app.set('view engine', 'ejs');
 app.set('views', './views');
@@ -159,4 +158,5 @@ app.post('/recetas/eliminar/:id', verificarSesion, async (req, res) => {
 app.get('/', (req, res) => res.redirect('/dashboard'));
 
 // Corriendo en el puerto 3001 libre
-app.listen(3001, () => console.log('Servidor corriendo en http://localhost:3001'));
+const PUERTO = process.env.PORT || 3001;
+app.listen(PUERTO, () => console.log(`Servidor corriendo en el puerto ${PUERTO}`));
