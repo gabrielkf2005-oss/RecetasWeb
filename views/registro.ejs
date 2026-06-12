@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrarse - Recetas Web</title>
+    <style>
+        :root {
+            --bg-gradient-start: #f5f7fa;
+            --bg-gradient-end: #c3cfe2;
+            --bg-card: #ffffff;
+            --text-main: #333333;
+            --text-muted: #777777;
+            --border-color: #cccccc;
+            --input-bg: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient-start: #121212;
+            --bg-gradient-end: #1c1c1c;
+            --bg-card: #1e1e1e;
+            --text-main: #f8f9fa;
+            --text-muted: #b0b0b0;
+            --border-color: #444444;
+            --input-bg: #2d2d2d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        .register-card {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+            text-align: center;
+            transition: background 0.3s;
+        }
+        .register-card h2 {
+            margin-top: 0;
+            color: var(--text-main);
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .register-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+            background: var(--input-bg);
+            color: var(--text-main);
+            transition: border-color 0.2s, background 0.3s, color 0.3s;
+        }
+        input:focus {
+            border-color: #28a745;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .link-login {
+            display: block;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .link-login:hover { text-decoration: underline; }
+        .error-fallback { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="register-card">
+        <h2>Crear Cuenta</h2>
+        <p>Regístrate para gestionar tus propias recetas</p>
+        
+        <form action="/registro" method="POST" id="registerForm">
+            <div class="form-group">
+                <label>Correo Electrónico:</label>
+                <input type="email" name="email" required placeholder="ejemplo@correo.com">
+            </div>
+            <div class="form-group">
+                <label>Contraseña:</label>
+                <input type="password" name="password" required placeholder="Crea una contraseña segura">
+            </div>
+            <button type="submit">Registrarme</button>
+        </form>
+
+        <a href="/login" class="link-login">¿Ya tienes cuenta? Inicia sesión aquí</a>
+    </div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+        <div class="error-fallback" id="errorBackend"><%= error %></div>
+    <% } %>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Sincronizar Modo Oscuro
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+
+        window.addEventListener('load', () => {
+            const errorDiv = document.getElementById('errorBackend');
+            if (errorDiv) {
+                const isDark = localStorage.getItem('theme') === 'dark';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error en el registro',
+                    text: errorDiv.textContent,
+                    confirmButtonColor: '#dc3545',
+                    background: isDark ? '#1e1e1e' : '#ffffff',
+                    color: isDark ? '#f8f9fa' : '#333333'
+                });
+            }
+        });
+    </script>
+</body>
+</html>

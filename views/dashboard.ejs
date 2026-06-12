@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard de Recetas</title>
+    <style>
+        :root {
+            --bg-body: #f8f9fa;
+            --bg-card: #ffffff;
+            --text-main: #333333;
+            --text-muted: #555555;
+            --border-color: #eee;
+            --shadow: rgba(0,0,0,0.05);
+            --bg-stat: #e9ecef;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #121212;
+            --bg-card: #1e1e1e;
+            --text-main: #f8f9fa;
+            --text-muted: #b0b0b0;
+            --border-color: #333333;
+            --shadow: rgba(0,0,0,0.3);
+            --bg-stat: #2d2d2d;
+        }
+
+        body { font-family: Arial, sans-serif; margin: 20px; background: var(--bg-body); color: var(--text-main); transition: background 0.3s, color 0.3s; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 4px var(--shadow); transition: background 0.3s; }
+        .container { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-top: 20px; }
+        .card { background: var(--bg-card); padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px var(--shadow); transition: background 0.3s; }
+        h3 { margin-top: 0; color: var(--text-main); }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 4px; color: var(--text-muted); }
+        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background: var(--bg-card); color: var(--text-main); }
+        button { padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button.btn-danger { background: #dc3545; }
+        .receta-item { border-bottom: 1px solid var(--border-color); padding: 15px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+        .receta-item:last-child { border: none; }
+        .actions { display: flex; gap: 10px; }
+        a { text-decoration: none; color: #007bff; }
+        
+        .search-group { margin-bottom: 15px; position: relative; }
+        .search-input { padding: 10px 12px 10px 35px; font-size: 14px; border: 1px solid var(--border-color); border-radius: 6px; width: 100%; box-sizing: border-box; background: var(--bg-card); color: var(--text-main); }
+
+        .stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: var(--bg-stat); padding: 15px; border-radius: 6px; text-align: center; border-left: 5px solid #007bff; transition: background 0.3s; }
+        .stat-card.secondary { border-left-color: #28a745; }
+        .stat-number { font-size: 24px; font-weight: bold; color: var(--text-main); margin-top: 5px; }
+        .stat-label { font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .theme-toggle { background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; font-weight: bold; margin-right: 15px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Panel de Control de Recetas</h2>
+        <div style="display: flex; align-items: center;">
+            <button class="theme-toggle" id="themeBtn">🌙 Modo Oscuro</button>
+            <a href="/logout" style="color: #dc3545; font-weight: bold;">Cerrar Sesión</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h3>Nueva Receta</h3>
+            <form action="/recetas/crear" method="POST">
+                <div class="form-group">
+                    <label>Nombre de la Receta:</label>
+                    <input type="text" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Categoría:</label>
+                    <select name="categoria" required>
+                        <% categorias.forEach(cat => { %>
+                            <option value="<%= cat._id %>"><%= cat.nombre %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Ingredientes:</label>
+                    <textarea name="ingredientes" rows="3" required placeholder="Ej. 2 huevos, 1 taza de azúcar..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Instrucciones:</label>
+                    <textarea name="instrucciones" rows="4" required placeholder="Ej. Mezclar los ingredientes y hornear..."></textarea>
+                </div>
+                <button type="submit">Guardar Receta</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Mis Recetas</h3>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-label">📋 Total de Recetas</div>
+                    <div class="stat-number"><%= recetas.length %></div>
+                </div>
+                <div class="stat-card secondary">
+                    <div class="stat-label">📁 Categorías Activas</div>
+                    <div class="stat-number"><%= categorias.length %></div>
+                </div>
+            </div>
+
+            <div class="search-group">
+                <span style="position: absolute; left: 12px; top: 10px; color: #6c757d;">🔍</span>
+                <input type="text" id="buscadorRecetas" class="search-input" placeholder="Buscar receta por nombre o ingrediente...">
+            </div>
+
+            <% if (recetas.length === 0) { %>
+                <p id="sinRecetasMsg" style="color: #888;">No hay recetas registradas todavía.</p>
+            <% } else { %>
+                <div id="listaRecetasContainer">
+                    <% recetas.forEach(receta => { %>
+                        <div class="receta-item">
+                            <div>
+                                <strong class="receta-titulo" style="font-size: 18px; color: var(--text-main);"><%= receta.nombre %></strong> 
+                                <span style="background: var(--bg-stat); padding: 2px 6px; border-radius: 4px; font-size: 12px; margin-left: 5px; color: var(--text-main);">
+                                    <%= receta.categoria ? receta.categoria.nombre : 'Sin categoría' %>
+                                </span>
+                                <p style="margin: 5px 0; font-size: 14px; color: var(--text-muted);"><strong>Ingredientes:</strong> <%= receta.ingredientes %></p>
+                                <p style="margin: 5px 0; font-size: 14px; color: var(--text-muted);"><strong>Instrucciones:</strong> <%= receta.instrucciones %></p>
+                            </div>
+                            <div class="actions">
+                                <a href="/recetas/editar/<%= receta._id %>"><button>Editar</button></a>
+                                <form action="/recetas/eliminar/<%= receta._id %>" method="POST" style="display:inline;" class="form-eliminar">
+                                    <button type="button" class="btn-danger btn-trigger-delete">Eliminar</button>
+                                </form>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+                <p id="noCoincidenciasMsg" style="color: #888; display: none;">No se encontraron recetas que coincidan con la búsqueda.</p>
+            <% } %>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const themeBtn = document.getElementById('themeBtn');
+        
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeBtn.textContent = '☀️ Modo Claro';
+            themeBtn.style.background = '#ffc107';
+            themeBtn.style.color = '#333';
+        }
+
+        themeBtn.addEventListener('click', () => {
+            if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeBtn.textContent = '🌙 Modo Oscuro';
+                themeBtn.style.background = '#6c757d';
+                themeBtn.style.color = 'white';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeBtn.textContent = '☀️ Modo Claro';
+                themeBtn.style.background = '#ffc107';
+                themeBtn.style.color = '#333';
+            }
+        });
+
+        const buscador = document.getElementById('buscadorRecetas');
+        if (buscador) {
+            buscador.addEventListener('keyup', function() {
+                const filtro = this.value.toLowerCase().trim();
+                const items = document.querySelectorAll('.receta-item');
+                let encontrados = 0;
+
+                items.forEach(item => {
+                    const titulo = item.querySelector('.receta-titulo').textContent.toLowerCase();
+                    const contenidoCompleto = item.textContent.toLowerCase();
+
+                    if (titulo.includes(filtro) || contenidoCompleto.includes(filtro)) {
+                        item.style.setProperty('display', 'flex', 'important');
+                        encontrados++;
+                    } else {
+                        item.style.setProperty('display', 'none', 'important');
+                    }
+                });
+
+                const msgNoCoincidencias = document.getElementById('noCoincidenciasMsg');
+                if (msgNoCoincidencias) {
+                    msgNoCoincidencias.style.display = (encontrados === 0 && filtro !== '') ? 'block' : 'none';
+                }
+            });
+        }
+
+        const formCrear = document.querySelector('form[action="/recetas/crear"]');
+        if (formCrear) {
+            formCrear.addEventListener('submit', () => {
+                localStorage.setItem('alerta_receta', 'creada');
+            });
+        }
+
+        const botonesEliminar = document.querySelectorAll('.btn-trigger-delete');
+        botonesEliminar.forEach(boton => {
+            boton.addEventListener('click', function(e) {
+                const formulario = this.closest('.form-eliminar');
+                
+                Swal.fire({
+                    title: '¿Estás completamente seguro?',
+                    text: "Esta acción no se puede deshacer y borrará la receta de la base de datos.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    background: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1e1e1e' : '#ffffff',
+                    color: document.documentElement.getAttribute('data-theme') === 'dark' ? '#f8f9fa' : '#333333'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        localStorage.setItem('alerta_receta', 'eliminada');
+                        formulario.submit();
+                    }
+                });
+            });
+        });
+
+        window.addEventListener('load', () => {
+            const accion = localStorage.getItem('alerta_receta');
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const swalBg = isDark ? '#1e1e1e' : '#ffffff';
+            const swalColor = isDark ? '#f8f9fa' : '#333333';
+
+            if (accion === 'creada') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Excelente!',
+                    text: 'La receta se ha guardado correctamente.',
+                    timer: 2200,
+                    showConfirmButton: false,
+                    background: swalBg,
+                    color: swalColor
+                });
+                localStorage.removeItem('alerta_receta');
+            } else if (accion === 'eliminada') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Receta Eliminada',
+                    text: 'El registro fue borrado con éxito.',
+                    timer: 2200,
+                    showConfirmButton: false,
+                    background: swalBg,
+                    color: swalColor
+                });
+                localStorage.removeItem('alerta_receta');
+            }
+        });
+    </script>
+</body>
+</html>

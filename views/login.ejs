@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Recetas Web</title>
+    <style>
+        :root {
+            --bg-gradient-start: #f5f7fa;
+            --bg-gradient-end: #c3cfe2;
+            --bg-card: #ffffff;
+            --text-main: #333333;
+            --text-muted: #777777;
+            --border-color: #cccccc;
+            --input-bg: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient-start: #121212;
+            --bg-gradient-end: #1c1c1c;
+            --bg-card: #1e1e1e;
+            --text-main: #f8f9fa;
+            --text-muted: #b0b0b0;
+            --border-color: #444444;
+            --input-bg: #2d2d2d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        .login-card {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+            text-align: center;
+            transition: background 0.3s;
+        }
+        .login-card h2 {
+            margin-top: 0;
+            color: var(--text-main);
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .login-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+            background: var(--input-bg);
+            color: var(--text-main);
+            transition: border-color 0.2s, background 0.3s, color 0.3s;
+        }
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error-fallback { display: none; }
+
+        .theme-floating-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="theme-floating-btn" id="loginThemeBtn">🌙 Modo Oscuro</button>
+
+    <div class="login-card">
+        <h2>¡Bienvenido!</h2>
+        <p>Ingresa tus credenciales para acceder al recetario</p>
+        
+        <form action="/login" method="POST" id="loginForm">
+            <div class="form-group">
+                <label>Correo Electrónico:</label>
+                <input type="email" name="email" required placeholder="ejemplo@correo.com" value="demo@demo.com">
+            </div>
+            <div class="form-group">
+                <label>Contraseña:</label>
+                <input type="password" name="password" required placeholder="••••••••" value="Demo1234">
+            </div>
+            <button type="submit">Ingresar al Panel</button>
+        </form>
+    </div>
+
+    <% if (error) { %>
+        <div class="error-fallback" id="errorBackend"><%= error %></div>
+    <% } %>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const themeBtn = document.getElementById('loginThemeBtn');
+        
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeBtn.textContent = '☀️ Modo Claro';
+            themeBtn.style.background = '#ffc107';
+            themeBtn.style.color = '#333';
+        }
+
+        themeBtn.addEventListener('click', () => {
+            if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeBtn.textContent = '🌙 Modo Oscuro';
+                themeBtn.style.background = '#6c757d';
+                themeBtn.style.color = 'white';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeBtn.textContent = '☀️ Modo Claro';
+                themeBtn.style.background = '#ffc107';
+                themeBtn.style.color = '#333';
+            }
+        });
+
+        window.addEventListener('load', () => {
+            const errorDiv = document.getElementById('errorBackend');
+            if (errorDiv) {
+                const isDark = localStorage.getItem('theme') === 'dark';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Acceso Denegado',
+                    text: errorDiv.textContent,
+                    confirmButtonColor: '#dc3545',
+                    background: isDark ? '#1e1e1e' : '#ffffff',
+                    color: isDark ? '#f8f9fa' : '#333333'
+                });
+            }
+        });
+    </script>
+</body>
+</html>
